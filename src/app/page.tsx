@@ -16,37 +16,38 @@ import {
   WeatherData,
   ForecastData,
   GeocodingData,
-  AstronomyData,
   AlertData,
+  MarineData,
 } from "@/services/weatherService";
 import { AstronomyCard } from "@/components/AstronomyCard";
 import { AirQualityCard } from "@/components/AirQualityCard";
 import { SearchInput } from "@/components/SearchInput";
 import { WeatherDisplay } from "@/components/WeatherDisplay";
 import { ForecastDisplay } from "@/components/ForecastDisplay";
+import { MarineCard } from "@/components/MarineCard";
+import { useWeatherStore } from "@/store/weatherStore";
 
 export default function Home() {
   const [weather, setWeather] = useState<WeatherData | undefined>();
   const [forecast, setForecast] = useState<ForecastData | undefined>();
-  const [astronomy, setAstronomy] = useState<AstronomyData | undefined>(
-    undefined
-  );
   const [alerts, setAlerts] = useState<AlertData | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [locations, setLocations] = useState<GeocodingData[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>("weather");
   const [airQuality, setAirQuality] = useState<WeatherData | undefined>();
+  const setMarineData = useWeatherStore(
+    (state: { setMarineData: (data: MarineData | null) => void }) =>
+      state.setMarineData
+  );
 
   useEffect(() => {
     if (weather?.location.name) {
       if (activeTab === "forecast") {
         fetchForecast(weather.location.name);
-      } else if (activeTab === "details") {
-        fetchDetails(weather.location.name);
       }
     }
-  }, [activeTab, weather?.location.name]);
+  }, [activeTab, weather?.location.name]); ////fix
 
   useEffect(() => {
     handleLocationClick();
@@ -65,12 +66,15 @@ export default function Home() {
       setForecast(forecastData);
       setAirQuality(weatherData);
 
-      const [astronomyData, alertsData] = await Promise.all([
-        weatherService.getAstronomy(city),
-        weatherService.getAlerts(city).catch(() => undefined),
-      ]);
+      const marineData = await weatherService.getMarine(
+        weatherData.location.lat,
+        weatherData.location.lon
+      );
+      setMarineData(marineData);
 
-      setAstronomy(astronomyData);
+      const alertsData = await weatherService
+        .getAlerts(city)
+        .catch(() => undefined);
       setAlerts(alertsData);
     } catch (err) {
       console.error("Veri alınamadı:", err);
@@ -88,23 +92,6 @@ export default function Home() {
         setForecast(forecastData);
       } catch (err) {
         console.error("Error fetching forecast data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const fetchDetails = async (city: string) => {
-    if (!astronomy) {
-      setLoading(true);
-      try {
-        const astronomyData = await weatherService
-          .getAstronomy(city)
-          .catch(() => undefined);
-
-        setAstronomy(astronomyData);
-      } catch (err) {
-        console.error("Error fetching details:", err);
       } finally {
         setLoading(false);
       }
@@ -195,10 +182,9 @@ export default function Home() {
                 {weather && <WeatherDisplay weather={weather} />}
                 <SimpleGrid cols={{ base: 1, sm: 2 }}>
                   {airQuality && <AirQualityCard data={airQuality} />}
-                  {astronomy && (
-                    <AstronomyCard data={astronomy} alerts={alerts} />
-                  )}
+                  <AstronomyCard alerts={alerts!} />
                 </SimpleGrid>
+                <MarineCard />
               </Stack>
             </Tabs.Panel>
 

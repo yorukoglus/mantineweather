@@ -1,12 +1,11 @@
-import { Card, Stack, Text, Group, Badge, Flex } from "@mantine/core";
-import { AlertData, AstronomyData } from "@/services/weatherService";
-import { IconSun, IconMoon } from "@tabler/icons-react";
-import { AlertsCard } from "./AlertsCard";
+"use client";
 
-interface AstronomyCardProps {
-  data: AstronomyData;
-  alerts?: AlertData;
-}
+import { memo } from "react";
+import { Card, Stack, Text, Group, Badge, Flex } from "@mantine/core";
+import { IconSun, IconMoon } from "@tabler/icons-react";
+import { useWeatherStore } from "@/store/weatherStore";
+import { AlertData, MarineData } from "@/services/weatherService";
+import { AlertsCard } from "./AlertsCard";
 
 const moonPhasesTR: { [key: string]: string } = {
   "New Moon": "Yeni Ay",
@@ -19,8 +18,22 @@ const moonPhasesTR: { [key: string]: string } = {
   "Waning Crescent": "Hilal (Küçülen)",
 };
 
-export function AstronomyCard({ data, alerts }: AstronomyCardProps) {
-  const { astro } = data.astronomy;
+export const AstronomyCard = memo(function AstronomyCard({
+  alerts,
+}: {
+  alerts: AlertData;
+}) {
+  const marineData = useWeatherStore(
+    (state: { marineData: MarineData | null }) => state.marineData
+  );
+
+  if (!marineData) return null;
+
+  const astroData = {
+    astronomy: { astro: marineData.forecast.forecastday[0].astro },
+  };
+
+  const { astro } = astroData.astronomy;
 
   const getMoonPhaseIcon = (phase: string) => {
     const phases: { [key: string]: string } = {
@@ -85,4 +98,4 @@ export function AstronomyCard({ data, alerts }: AstronomyCardProps) {
       </Stack>
     </Card>
   );
-}
+});
