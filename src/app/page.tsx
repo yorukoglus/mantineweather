@@ -1,103 +1,324 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  Container,
+  Title,
+  TextInput,
+  Button,
+  Group,
+  Paper,
+  Text,
+  Grid,
+  Card,
+  Image,
+  Stack,
+  Tabs,
+  rem,
+  Loader,
+  Alert,
+  Select,
+  ActionIcon,
+  Tooltip,
+  Badge,
+  Box,
+} from "@mantine/core";
+import {
+  IconSearch,
+  IconAlertCircle,
+  IconCurrentLocation,
+} from "@tabler/icons-react";
+import {
+  weatherService,
+  WeatherData,
+  ForecastData,
+  GeocodingData,
+} from "@/services/weatherService";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [city, setCity] = useState("");
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [forecast, setForecast] = useState<ForecastData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [locations, setLocations] = useState<GeocodingData[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleSearch = async () => {
+    if (!city.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Önce şehir için geocoding yap
+      const geoData = await weatherService.getGeocoding(city);
+      setLocations(geoData);
+
+      if (geoData.length === 0) {
+        throw new Error("Şehir bulunamadı");
+      }
+
+      // İlk sonucu kullan
+      const location = geoData[0];
+      setSelectedLocation(`${location.name}, ${location.country}`);
+
+      // Hava durumu verilerini al
+      const [weatherData, forecastData] = await Promise.all([
+        weatherService.getCurrentWeatherByCoords(location.lat, location.lon),
+        weatherService.getForecastByCoords(location.lat, location.lon),
+      ]);
+      setWeather(weatherData);
+      setForecast(forecastData);
+    } catch (err) {
+      setError(
+        "Hava durumu bilgisi alınamadı. Lütfen şehir adını kontrol edin."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLocationClick = async () => {
+    if (!navigator.geolocation) {
+      setError("Tarayıcınız konum özelliğini desteklemiyor.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        }
+      );
+
+      const [weatherData, forecastData] = await Promise.all([
+        weatherService.getCurrentWeatherByCoords(
+          position.coords.latitude,
+          position.coords.longitude
+        ),
+        weatherService.getForecastByCoords(
+          position.coords.latitude,
+          position.coords.longitude
+        ),
+      ]);
+
+      setWeather(weatherData);
+      setForecast(forecastData);
+      setCity(weatherData.location.name);
+      setSelectedLocation(
+        `${weatherData.location.name}, ${weatherData.location.country}`
+      );
+    } catch (err) {
+      setError("Konum bilgisi alınamadı veya hava durumu verisi bulunamadı.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    handleLocationClick();
+  }, []);
+
+  return (
+    <Container size="md" py="xl">
+      <Stack gap="lg">
+        <Title order={1} ta="center">
+          Hava Durumu Uygulaması
+        </Title>
+
+        <Group>
+          <TextInput
+            placeholder="Şehir adı girin..."
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            style={{ flex: 1 }}
+            onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+          />
+          <Tooltip label="Konumumu Kullan">
+            <ActionIcon
+              variant="light"
+              size="lg"
+              onClick={handleLocationClick}
+              loading={loading}
+            >
+              <IconCurrentLocation size={rem(16)} />
+            </ActionIcon>
+          </Tooltip>
+          <Button
+            leftSection={<IconSearch size={rem(16)} />}
+            onClick={handleSearch}
+            loading={loading}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            Ara
+          </Button>
+        </Group>
+
+        {locations.length > 0 && (
+          <Select
+            label="Konum Seçin"
+            placeholder="Konum seçin..."
+            data={locations.map((loc) => ({
+              value: `${loc.name}, ${loc.country}`,
+              label: `${loc.name}${loc.region ? `, ${loc.region}` : ""}, ${
+                loc.country
+              }`,
+            }))}
+            value={selectedLocation}
+            onChange={setSelectedLocation}
+            searchable
+            clearable
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        )}
+
+        {error && (
+          <Alert icon={<IconAlertCircle size={rem(16)} />} color="red">
+            {error}
+          </Alert>
+        )}
+
+        {loading && (
+          <Group justify="center" py="xl">
+            <Loader size="lg" />
+          </Group>
+        )}
+
+        {weather && (
+          <Tabs defaultValue="current">
+            <Tabs.List>
+              <Tabs.Tab value="current">Güncel Hava Durumu</Tabs.Tab>
+              <Tabs.Tab value="forecast">5 Günlük Tahmin</Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="current">
+              <Paper p="md" mt="md" withBorder>
+                <Grid>
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="xs">
+                      <Text size="xl" fw={500}>
+                        {weather.location.name}, {weather.location.country}
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        Son güncelleme:{" "}
+                        {new Date(weather.location.localtime).toLocaleString(
+                          "tr-TR"
+                        )}
+                      </Text>
+                      <Group>
+                        <img
+                          src={weatherService.getWeatherIcon(
+                            weather.current.condition.icon
+                          )}
+                          alt={weather.current.condition.text}
+                          style={{
+                            width: "64px",
+                            height: "64px",
+                            objectFit: "contain",
+                          }}
+                        />
+                        <Stack gap={0}>
+                          <Text size="xl">
+                            {Math.round(weather.current.temp_c)}°C
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            {weather.current.condition.text}
+                          </Text>
+                        </Stack>
+                      </Group>
+                    </Stack>
+                  </Grid.Col>
+                  <Grid.Col span={{ base: 12, md: 6 }}>
+                    <Stack gap="xs">
+                      <Group>
+                        <Badge size="lg" variant="light">
+                          Hissedilen: {Math.round(weather.current.feelslike_c)}
+                          °C
+                        </Badge>
+                        <Badge size="lg" variant="light">
+                          Nem: {weather.current.humidity}%
+                        </Badge>
+                      </Group>
+                      <Group>
+                        <Badge size="lg" variant="light">
+                          Rüzgar: {weather.current.wind_kph} km/s
+                        </Badge>
+                        <Badge size="lg" variant="light">
+                          Basınç: {weather.current.pressure_mb} mb
+                        </Badge>
+                      </Group>
+                      <Text size="sm" c="dimmed">
+                        Koordinatlar: {weather.location.lat.toFixed(2)},{" "}
+                        {weather.location.lon.toFixed(2)}
+                      </Text>
+                    </Stack>
+                  </Grid.Col>
+                </Grid>
+              </Paper>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="forecast">
+              {forecast && (
+                <Grid mt="md">
+                  {forecast.forecast.forecastday.map((day) => (
+                    <Grid.Col
+                      key={day.date}
+                      span={{ base: 12, xl: 3, lg: 3, sm: 6, md: 4 }}
+                    >
+                      <Card withBorder>
+                        <Stack gap="xs" align="center">
+                          <Text fw={500}>
+                            {new Date(day.date).toLocaleDateString("tr-TR", {
+                              weekday: "long",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </Text>
+                          <Group gap="xs">
+                            <img
+                              src={weatherService.getWeatherIcon(
+                                day.day.condition.icon
+                              )}
+                              alt={day.day.condition.text}
+                              style={{
+                                width: "64px",
+                                height: "64px",
+                                objectFit: "contain",
+                              }}
+                            />
+                            <Text size="lg">
+                              {Math.round(day.day.avgtemp_c)}°C
+                            </Text>
+                          </Group>
+                          <Text size="sm" c="dimmed">
+                            {day.day.condition.text}
+                          </Text>
+                          <Group gap="xs">
+                            <Badge size="sm" variant="light">
+                              Max: {Math.round(day.day.maxtemp_c)}°C
+                            </Badge>
+                            <Badge size="sm" variant="light">
+                              Min: {Math.round(day.day.mintemp_c)}°C
+                            </Badge>
+                            <Badge size="sm" variant="light">
+                              Nem: {day.day.avghumidity}%
+                            </Badge>
+                            <Badge size="sm" variant="light">
+                              Rüzgar: {day.day.maxwind_kph}
+                            </Badge>
+                          </Group>
+                        </Stack>
+                      </Card>
+                    </Grid.Col>
+                  ))}
+                </Grid>
+              )}
+            </Tabs.Panel>
+          </Tabs>
+        )}
+      </Stack>
+    </Container>
   );
 }
