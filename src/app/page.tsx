@@ -15,6 +15,7 @@ import {
   IconSun,
   IconCalendar,
   IconMap,
+  IconMoon,
 } from "@tabler/icons-react";
 import {
   weatherService,
@@ -32,6 +33,7 @@ import { ForecastDisplay } from "@/components/ForecastDisplay";
 import { MarineCard } from "@/components/MarineCard";
 import { useWeatherStore } from "@/store/weatherStore";
 import { MapCard } from "@/components/MapCard";
+import ThemeToggleButton from "./ThemeToggleButton";
 
 export default function Home() {
   const [weather, setWeather] = useState<WeatherData | undefined>();
@@ -142,6 +144,7 @@ export default function Home() {
 
   return (
     <Container size="lg" py="xl">
+      <ThemeToggleButton />
       <Stack gap="md">
         <SearchInput
           searchAction={handleSearch}

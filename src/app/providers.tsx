@@ -10,5 +10,9 @@ const theme = createTheme({
 });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return <MantineProvider theme={theme}>{children}</MantineProvider>;
+  return (
+    <MantineProvider theme={theme} defaultColorScheme="dark">
+      {children}
+    </MantineProvider>
+  );
 }
