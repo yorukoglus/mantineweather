@@ -29,7 +29,7 @@ import { AstronomyCard } from "@/components/AstronomyCard";
 import { AirQualityCard } from "@/components/AirQualityCard";
 import { SearchInput } from "@/components/SearchInput";
 import { WeatherDisplay } from "@/components/WeatherDisplay";
-import { ForecastDisplay } from "@/components/ForecastDisplay";
+import { ForecastDisplay } from "@/components/Forecast/ForecastDisplay";
 import { MarineCard } from "@/components/MarineCard";
 import { useWeatherStore } from "@/store/weatherStore";
 import { MapCard } from "@/components/MapCard";

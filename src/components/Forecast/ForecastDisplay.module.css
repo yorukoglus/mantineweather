@@ -1,0 +1,12 @@
+.card {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cardLight:hover {
+  background: #f1f3f5;
+}
+
+.cardDark:hover {
+  background: #444;
+}

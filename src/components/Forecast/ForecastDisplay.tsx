@@ -1,9 +1,22 @@
 "use client";
 
 import { memo } from "react";
-import { Grid, Card, Stack, Text, Group, Badge } from "@mantine/core";
+import {
+  Grid,
+  Card,
+  Stack,
+  Text,
+  Group,
+  Badge,
+  Modal,
+  ScrollArea,
+  useMantineColorScheme,
+} from "@mantine/core";
 import { ForecastData } from "@/services/weatherService";
 import { weatherService } from "@/services/weatherService";
+import { useState } from "react";
+import ForecastDetailModal from "./ForecastDetailModal";
+import styles from "./ForecastDisplay.module.css";
 
 interface ForecastDisplayProps {
   forecast: ForecastData;
@@ -12,14 +25,46 @@ interface ForecastDisplayProps {
 export const ForecastDisplay = memo(function ForecastDisplay({
   forecast,
 }: ForecastDisplayProps) {
+  const [opened, setOpened] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<any>(null);
+  const { colorScheme } = useMantineColorScheme();
+
+  const handleCardClick = (day: any) => {
+    setSelectedDay(day);
+    setOpened(true);
+  };
+
   return (
     <Grid mt="md">
+      <Modal
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title={
+          selectedDay
+            ? new Date(selectedDay.date).toLocaleDateString("tr-TR", {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+              })
+            : ""
+        }
+        size="lg"
+        scrollAreaComponent={ScrollArea.Autosize}
+      >
+        {selectedDay && <ForecastDetailModal day={selectedDay} />}
+      </Modal>
       {forecast.forecast.forecastday.map((day) => (
         <Grid.Col
           key={day.date}
           span={{ base: 12, xl: 3, lg: 3, sm: 6, md: 4 }}
         >
-          <Card withBorder>
+          <Card
+            withBorder
+            onClick={() => handleCardClick(day)}
+            className={`${styles.card} ${
+              colorScheme === "dark" ? styles.cardDark : styles.cardLight
+            }`}
+          >
             <Stack gap="xs" align="center">
               <Text fw={500}>
                 {new Date(day.date).toLocaleDateString("tr-TR", {
