@@ -10,7 +10,12 @@ import {
   SimpleGrid,
   Center,
 } from "@mantine/core";
-import { IconAlertCircle, IconSun, IconCalendar } from "@tabler/icons-react";
+import {
+  IconAlertCircle,
+  IconSun,
+  IconCalendar,
+  IconMap,
+} from "@tabler/icons-react";
 import {
   weatherService,
   WeatherData,
@@ -26,6 +31,7 @@ import { WeatherDisplay } from "@/components/WeatherDisplay";
 import { ForecastDisplay } from "@/components/ForecastDisplay";
 import { MarineCard } from "@/components/MarineCard";
 import { useWeatherStore } from "@/store/weatherStore";
+import { MapCard } from "@/components/MapCard";
 
 export default function Home() {
   const [weather, setWeather] = useState<WeatherData | undefined>();
@@ -36,22 +42,14 @@ export default function Home() {
   const [locations, setLocations] = useState<GeocodingData[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>("weather");
   const [airQuality, setAirQuality] = useState<WeatherData | undefined>();
+  const [coords, setCoords] = useState<{
+    lat: number | null;
+    lon: number | null;
+  }>({ lat: null, lon: null });
   const setMarineData = useWeatherStore(
     (state: { setMarineData: (data: MarineData | null) => void }) =>
       state.setMarineData
   );
-
-  useEffect(() => {
-    if (weather?.location.name) {
-      if (activeTab === "forecast") {
-        fetchForecast(weather.location.name);
-      }
-    }
-  }, [activeTab, weather?.location.name]); ////fix
-
-  useEffect(() => {
-    handleLocationClick();
-  }, []);
 
   const fetchAllData = async (city: string) => {
     setLoading(true);
@@ -81,20 +79,6 @@ export default function Home() {
       setError("Hava durumu verileri alınamadı. Lütfen tekrar deneyin.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchForecast = async (city: string) => {
-    if (!forecast) {
-      setLoading(true);
-      try {
-        const forecastData = await weatherService.getForecastByCity(city);
-        setForecast(forecastData);
-      } catch (err) {
-        console.error("Error fetching forecast data:", err);
-      } finally {
-        setLoading(false);
-      }
     }
   };
 
@@ -133,6 +117,11 @@ export default function Home() {
         }
       );
 
+      setCoords({
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+      });
+
       const weatherData = await weatherService.getCurrentWeatherByCoords(
         position.coords.latitude,
         position.coords.longitude
@@ -141,10 +130,15 @@ export default function Home() {
       await fetchAllData(weatherData.location.name);
     } catch (err) {
       setError("Konum bilgisi alınamadı veya hava durumu verisi bulunamadı.");
+      setCoords({ lat: null, lon: null });
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    handleLocationClick();
+  }, []);
 
   return (
     <Container size="lg" py="xl">
@@ -175,6 +169,9 @@ export default function Home() {
               <Tabs.Tab value="forecast" leftSection={<IconCalendar />}>
                 Tahmin
               </Tabs.Tab>
+              <Tabs.Tab value="map" leftSection={<IconMap />}>
+                Harita
+              </Tabs.Tab>
             </Tabs.List>
 
             <Tabs.Panel value="weather">
@@ -190,6 +187,10 @@ export default function Home() {
 
             <Tabs.Panel value="forecast">
               {forecast && <ForecastDisplay forecast={forecast} />}
+            </Tabs.Panel>
+
+            <Tabs.Panel value="map">
+              <MapCard lat={coords.lat} lon={coords.lon} loading={loading} />
             </Tabs.Panel>
           </Tabs>
         )}

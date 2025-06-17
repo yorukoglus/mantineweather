@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import { MantineProvider } from '@mantine/core';
+import classes from "./theme.module.css";
+import { Button, MantineProvider, createTheme } from "@mantine/core";
+
+const theme = createTheme({
+  components: {
+    Button: Button.extend({ classNames: classes }),
+  },
+});
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <MantineProvider>
-      {children}
-    </MantineProvider>
-  );
-} 
+  return <MantineProvider theme={theme}>{children}</MantineProvider>;
+}
