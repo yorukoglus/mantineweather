@@ -27,8 +27,7 @@ export const MapCard: React.FC<MapCardProps> = ({ lat, lon, loading }) => {
       <iframe
         title="Google Maps"
         width="100%"
-        height="350"
-        frameBorder="0"
+        height="650"
         style={{ border: 0 }}
         src={mapSrc}
         allowFullScreen

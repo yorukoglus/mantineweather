@@ -35,7 +35,7 @@ export default function ThemeToggleButton() {
   };
 
   return (
-    <div style={{ position: "fixed", top: 16, right: 16, zIndex: 1000 }}>
+    <div style={{ position: "fixed", top: 16, right: 16, zIndex: 1 }}>
       <ActionIcon
         onClick={handleToggle}
         variant="default"

@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   TextInput,
   Button,
   Group,
   Tooltip,
   ActionIcon,
-  Select,
   rem,
 } from "@mantine/core";
 import { IconSearch, IconCurrentLocation } from "@tabler/icons-react";
@@ -24,7 +23,6 @@ export function SearchInput({
   searchAction,
   locationAction,
   loading,
-  locations = [],
 }: SearchInputProps) {
   const [inputValue, setInputValue] = useState("");
 
@@ -39,19 +37,6 @@ export function SearchInput({
     if (!inputValue.trim()) return;
     searchAction(inputValue);
   };
-
-  const handleLocationSelect = (value: string | null) => {
-    if (!value) return;
-
-    const [cityName] = value.split(",");
-    setInputValue(cityName.trim());
-    searchAction(cityName.trim());
-  };
-
-  const locationSelectData = locations.map((loc) => ({
-    value: `${loc.name}, ${loc.country} ${loc.region}`,
-    label: `${loc.name}${loc.region ? `, ${loc.region}` : ""}, ${loc.country}`,
-  }));
 
   return (
     <Group>
@@ -73,9 +58,11 @@ export function SearchInput({
         </ActionIcon>
       </Tooltip>
       <Button
+        className="transition-all duration-500"
         leftSection={<IconSearch size={rem(16)} />}
         onClick={handleSearch}
         loading={loading}
+        disabled={!inputValue.trim()}
       >
         Ara
       </Button>

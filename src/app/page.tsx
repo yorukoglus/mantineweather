@@ -15,7 +15,6 @@ import {
   IconSun,
   IconCalendar,
   IconMap,
-  IconMoon,
 } from "@tabler/icons-react";
 import {
   weatherService,
@@ -34,6 +33,7 @@ import { MarineCard } from "@/components/MarineCard";
 import { useWeatherStore } from "@/store/weatherStore";
 import { MapCard } from "@/components/MapCard";
 import ThemeToggleButton from "./ThemeToggleButton";
+import FaqDrawer from "@/components/FaqDrawer";
 
 export default function Home() {
   const [weather, setWeather] = useState<WeatherData | undefined>();
@@ -93,6 +93,7 @@ export default function Home() {
 
       if (geoData.length > 0) {
         const firstResult = geoData[0];
+        setCoords({ lat: firstResult.lat, lon: firstResult.lon });
         await fetchAllData(firstResult.region!);
       } else {
         setError("Şehir bulunamadı. Lütfen farklı bir şehir adı deneyin.");
@@ -145,12 +146,12 @@ export default function Home() {
   return (
     <Container size="lg" py="xl">
       <ThemeToggleButton />
+      <FaqDrawer />
       <Stack gap="md">
         <SearchInput
           searchAction={handleSearch}
           locationAction={handleLocationClick}
           loading={loading}
-          locations={locations}
         />
 
         {error && (
