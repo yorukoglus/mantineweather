@@ -17,6 +17,7 @@ import { weatherService } from "@/services/weatherService";
 import { useState } from "react";
 import ForecastDetailModal from "./ForecastDetailModal";
 import styles from "./ForecastDisplay.module.css";
+import Image from "next/image";
 
 interface ForecastDisplayProps {
   forecast: ForecastData;
@@ -74,14 +75,12 @@ export const ForecastDisplay = memo(function ForecastDisplay({
                 })}
               </Text>
               <Group gap="xs">
-                <img
+                <Image
                   src={weatherService.getWeatherIcon(day.day.condition.icon)}
                   alt={day.day.condition.text}
-                  style={{
-                    width: "64px",
-                    height: "64px",
-                    objectFit: "contain",
-                  }}
+                  width={64}
+                  height={64}
+                  style={{ objectFit: "contain" }}
                 />
                 <Text size="lg">{Math.round(day.day.avgtemp_c)}°C</Text>
               </Group>

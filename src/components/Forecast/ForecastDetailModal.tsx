@@ -1,14 +1,16 @@
 import { Stack, Group, Text, Badge, ScrollArea, Table } from "@mantine/core";
 import { weatherService } from "@/services/weatherService";
+import Image from "next/image";
 
 export default function ForecastDetailModal({ day }: { day: any }) {
   return (
     <Stack gap="md">
       <Group>
-        <img
+        <Image
           src={weatherService.getWeatherIcon(day.day.condition.icon)}
           alt={day.day.condition.text}
-          style={{ width: 64, height: 64 }}
+          width={64}
+          height={64}
         />
         <Stack gap={0}>
           <Text size="lg" fw={500}>
@@ -60,7 +62,7 @@ export default function ForecastDetailModal({ day }: { day: any }) {
                 <Table.Td>{h.time.split(" ")[1]}</Table.Td>
                 <Table.Td>
                   <Group gap={4}>
-                    <img
+                    <Image
                       src={weatherService.getWeatherIcon(h.condition.icon)}
                       alt={h.condition.text}
                       width={24}

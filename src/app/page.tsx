@@ -20,7 +20,6 @@ import {
   weatherService,
   WeatherData,
   ForecastData,
-  GeocodingData,
   AlertData,
   MarineData,
 } from "@/services/weatherService";
@@ -41,7 +40,6 @@ export default function Home() {
   const [alerts, setAlerts] = useState<AlertData | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const [locations, setLocations] = useState<GeocodingData[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>("weather");
   const [airQuality, setAirQuality] = useState<WeatherData | undefined>();
   const [coords, setCoords] = useState<{
@@ -89,7 +87,6 @@ export default function Home() {
 
     try {
       const geoData = await weatherService.getGeocoding(city);
-      setLocations(geoData);
 
       if (geoData.length > 0) {
         const firstResult = geoData[0];
@@ -131,7 +128,7 @@ export default function Home() {
       );
 
       await fetchAllData(weatherData.location.name);
-    } catch (err) {
+    } catch {
       setError("Konum bilgisi alınamadı veya hava durumu verisi bulunamadı.");
       setCoords({ lat: null, lon: null });
     } finally {
@@ -141,6 +138,7 @@ export default function Home() {
 
   useEffect(() => {
     handleLocationClick();
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

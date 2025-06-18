@@ -4,6 +4,7 @@ import { memo } from "react";
 import { Card, Grid, Stack, Text, Group, Badge } from "@mantine/core";
 import { WeatherData } from "@/services/weatherService";
 import { weatherService } from "@/services/weatherService";
+import Image from "next/image";
 
 interface WeatherDisplayProps {
   weather: WeatherData;
@@ -25,16 +26,14 @@ export const WeatherDisplay = memo(function WeatherDisplay({
               {new Date(weather.location.localtime).toLocaleString("tr-TR")}
             </Text>
             <Group>
-              <img
+              <Image
                 src={weatherService.getWeatherIcon(
                   weather.current.condition.icon
                 )}
                 alt={weather.current.condition.text}
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  objectFit: "contain",
-                }}
+                width={64}
+                height={64}
+                style={{ objectFit: "contain" }}
               />
               <Stack gap={0}>
                 <Text size="xl">{Math.round(weather.current.temp_c)}°C</Text>
